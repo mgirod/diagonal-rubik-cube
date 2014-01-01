@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+use strict;
+use feature qw(switch say);
+use DR;
+
+sub run {
+	my $cmd = shift @ARGV;
+	die "Only valid: PQRSTUVWpqrstuvw\n" unless $cmd
+		and $cmd =~ /^[p-w]+$/i;
+	my @a = split//, $cmd;
+	eval "rot$_" while $_ = shift @a;
+	say $cmd;
+	rep6;
+	check;
+}
+sets();
+run;

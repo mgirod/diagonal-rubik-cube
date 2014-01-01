@@ -1,0 +1,13 @@
+#!/usr/bin/perl -w
+
+use strict;
+use DR;
+
+for my $r1 (qw(p q r s)) {
+	for my $r2 (qw(p q r s t u v w)) {
+		next if $r2 eq $r1;
+		perm($r1, $r2, uc($r1));
+		perm($r1, uc($r2), uc($r1));
+	}
+}
+showres;

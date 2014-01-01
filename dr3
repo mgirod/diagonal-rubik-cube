@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+use strict;
+use DR;
+
+for my $r1 (qw(p q r s)) {
+	for my $r2 (qw(p q r s t u v w)) {
+		next if $r2 eq $r1;
+		for my $r3 (qw(p q r s t u v w)) {
+			next if $r3 eq $r1 or $r3 eq $r2;
+			for my $r4 (qw(p q r s t u v w)) {
+				next if $r4 eq $r1 or $r4 eq $r2 or $r4 eq $r3;
+				perm($r1, $r2, $r3, $r4, uc($r2), uc($r3), uc($r4), uc($r1));
+				perm($r1, $r2, $r3, $r4, uc($r3), uc($r2), uc($r4), uc($r1));
+				perm($r1, $r2, $r3, $r4, uc($r2), uc($r4), uc($r3), uc($r1));
+				perm($r1, $r2, $r3, $r4, uc($r3), uc($r4), uc($r2), uc($r1));
+				perm($r1, $r2, $r3, $r4, uc($r1), uc($r2), uc($r3), uc($r4));
+				perm($r1, $r2, $r3, $r4, uc($r1), uc($r2), uc($r4), uc($r3));
+				perm($r1, $r2, $r3, $r4, uc($r1), uc($r4), uc($r2), uc($r3));
+				perm($r1, $r2, $r3, $r4, uc($r1), uc($r4), uc($r3), uc($r2));
+				# perm($r1, $r2, $r3, uc($r4), uc($r2), uc($r3), $r4, uc($r1));
+				# perm($r1, $r2, $r3, uc($r4), uc($r3), uc($r2), $r4, uc($r1));
+				# perm($r1, $r2, $r3, uc($r4), uc($r2), $r4, uc($r3), uc($r1));
+				# perm($r1, $r2, uc($r3), $r4, uc($r2), $r3, uc($r4), uc($r1));
+				# perm($r1, $r2, uc($r3), $r4, $r3, uc($r2), uc($r4), uc($r1));
+				# perm($r1, $r2, uc($r3), $r4, uc($r2), uc($r4), $r3, uc($r1));
+				# perm($r1, uc($r2), $r3, $r4, $r2, uc($r3), uc($r4), uc($r1));
+				# perm($r1, uc($r2), $r3, $r4, uc($r3), $r2, uc($r4), uc($r1));
+				# perm($r1, uc($r2), $r3, $r4, $r2, uc($r4), uc($r3), uc($r1));
+			}
+		}
+	}
+}
+# showres;
