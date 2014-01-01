@@ -4,7 +4,8 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(sets rep6 stable check perm showres
 						 rotP rotQ rotR rotS rotT rotU rotV rotW
-						 rotp rotq rotr rots rott rotu rotv rotw);
+						 rotp rotq rotr rots rott rotu rotv rotw
+					   $showp);
 
 use warnings;
 use strict;
@@ -12,6 +13,8 @@ use feature qw(switch say);
 
 my $s = {};
 my (%res, %done);
+our $showp = sub { my $n = shift; $n and $n < 78 and $n > 65; };
+# 78: nothing changed
 
 sub sets {
 	for my $i (0..5) {
@@ -81,9 +84,7 @@ sub perm {
 	my $n = stable;
 	push @{$res{$n}}, $k;
 	# if (interestingly) stable, show the representation
-	if ($n == 63) { # 63 is special for dr3
-	# if ($n == 65) { # 65 is special for dr3
-	# if ($n < 78 and $n > 65) { # 78 means nothing changed
+	if (&$showp($n)) {
 		say "$k: $n";
 		rep6;
 	}
