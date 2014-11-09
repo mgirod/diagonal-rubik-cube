@@ -10,7 +10,8 @@ sub run {
 		and $cmd =~ /^[p-w]+$/i;
 	my @a = split//, $cmd;
 	eval "rot$_" while $_ = shift @a;
-	say $cmd;
+	my $n = stable;
+	say "$cmd: $n";
 	rep6;
 	check;
 }

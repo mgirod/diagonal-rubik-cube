@@ -1,0 +1,46 @@
+#!/usr/bin/perl -w
+
+use strict;
+use DR;
+use Getopt::Long;
+use Algorithm::Combinatorics qw(combinations);
+use Algorithm::Permute qw(permute);
+use vars qw(%opt);
+
+sub usage {
+	my $err = shift;
+	print "$err\n\n" if $err;
+	print <<eot;
+  Options:
+    --verbose: print the frequency of each preserved positions number
+    --preserve s: show only moves which preserve a list of positions
+      (e.g.: edges, corners, P, Q, ..., W, 0/1, ..., 5/12)
+    --goal s: show only moves which achieve some goals
+      (e.g.: 5/12:2/11 meaning that what was in 2/11 will be found in 5/12)
+    --help: print this
+eot
+#    --fixed n: number of preserved positions (def: 66 unless --preserve)
+	exit;
+}
+my $res = GetOptions(\%opt, 'verbose', 'help', 'preserve=s', 'goal=s');
+#										 'fixed=i', 'verbose', 'help', 'preserve=s', 'goal=s');
+usage if $opt{help} or !$res;
+if ($opt{preserve} or $opt{goal}) {
+	$showp = filterp($opt{preserve}||'', $opt{goal}||'', $opt{fixed});
+} else {
+	die 'Here, one of goals/preserve is mandatory\n';
+	# $opt{fixed} = 66 unless defined $opt{fixed};
+	# $showp = sub { my $n = shift; $n and $n == $opt{fixed}; };
+}
+
+my $iter = combinations(['p'..'w'], 4);
+while (my $c = $iter->next) {
+	my @c4 = @{$c};
+	my @C4 = map{uc} @c4;
+	my $p = new Algorithm::Permute([@c4, @C4]);
+	while ($p and my @res = $p->next) {
+		permlite(@res);
+#		perm(@res);
+	}
+}
+# showres if $opt{verbose};

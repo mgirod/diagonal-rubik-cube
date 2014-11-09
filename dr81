@@ -1,0 +1,88 @@
+#!/usr/bin/perl -w
+
+use strict;
+use 5.018;
+use DR;
+use Getopt::Long;
+use vars qw(%opt);
+
+sub usage {
+	my $err = shift;
+	print "$err\n\n" if $err;
+	print <<eot;
+  This version permutes preserving the corners.
+  Options:
+    --verbose: print the frequency of each preserved positions number
+    --preserve s: show only moves which preserve a list of positions
+      (e.g.: edges, corners, P, Q, ..., W, 0/1, ..., 5/12)
+    --goal s: show only moves which achieve some goals
+      (e.g.: 5/12:2/11 meaning that what was in 2/11 will be found in 5/12)
+    --help: print this
+eot
+	exit;
+}
+my $res = GetOptions(\%opt, 'verbose', 'help', 'preserve=s', 'goal=s');
+usage if $opt{help} or !$res;
+if ($opt{preserve} or $opt{goal}) {
+	$showp = filterp($opt{preserve}||'', $opt{goal}||'');
+} else {
+	die 'Here, one of goals/preserve is mandatory\n';
+}
+my %opp = ('p' => 'u',
+					 'q' => 't',
+					 'r' => 'w',
+					 's' => 'v',
+					 't' => 'q',
+					 'u' => 'p',
+					 'v' => 's',
+					 'w' => 'r');
+my %rnd = ('p' => ['q', 's', 'w'], #along the edges
+					 'q' => ['r', 'p', 'v'],
+					 'r' => ['s', 'q', 'u'],
+					 's' => ['p', 'r', 't'],
+					 'w' => ['t', 'v', 'p'],
+					 'v' => ['w', 'u', 'q'],
+					 'u' => ['v', 't', 'r'],
+					 't' => ['u', 'w', 's'],);
+my %trn = ('p' => ['t', 'v', 'r'], #along the diagonals
+					 'q' => ['s', 'w', 'u'],
+					 'r' => ['t', 'p', 'v'],
+					 's' => ['q', 'u', 'w'],
+					 'w' => ['q', 's', 'u'],
+					 'v' => ['p', 't', 'r'],
+					 'u' => ['q', 'w', 's'],
+					 't' => ['v', 'r', 'p'],);
+sub mix {
+	my ($a, $b, $i) = @_;
+	my @c;
+	push @c, ($trn{$a}[$_], $trn{$b}[($_+$i)%3]) for 0..2;
+	return @c;
+}
+sub MIX {
+	my ($a, $b, $i) = @_;
+	my @c;
+	push @c, (uc($trn{$a}[$_]), uc($trn{$b}[($_+$i)%3])) for reverse 0..2;
+	return @c;
+}
+for my $o (sort keys %rnd) {
+	# my $p = $opp{$o};
+	# my @a = ($o, $p, $rnd{$p}[0], $rnd{$o}[2], $rnd{$p}[1], $rnd{$o}[0]);
+	# my $q = $trn{$o}[0];
+	# my $s = $rnd{$o}[1];
+	# say join'', mix($q, $s, $_) for 0..2;
+
+	# my @a = ();
+	# push @a, ($trn{$q}[$_], $trn{$s}[$_]) for 0..2;
+  # say join'', @a;
+
+	for my $i (0..2) {
+		my $p = $rnd{$o}[$i];
+		# say join'', mix($o, $p, $_) for 0..2;
+		for (0..2) {
+			my @a = mix($o, $p, $_);
+			perm(@a, @a, @a);
+			@a = MIX($o, $p, $_);
+			perm(@a, @a, @a);
+		}
+	}
+}

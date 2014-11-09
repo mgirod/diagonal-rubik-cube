@@ -2,14 +2,14 @@ package DR;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(sets rep6 stable check perm showres
+@EXPORT = qw(sets rep6 stable check perm permlite showres filterp
 						 rotP rotQ rotR rotS rotT rotU rotV rotW
 						 rotp rotq rotr rots rott rotu rotv rotw
 					   $showp);
 
 use warnings;
 use strict;
-use feature qw(switch say);
+use 5.018;
 
 my $s = {};
 my (%res, %done);
@@ -23,11 +23,69 @@ sub sets {
 		}
 	}
 }
+sub filterp {
+	my ($pres, $goal, $fix) = @_;
+	my (@pr, @gl);
+	my %seen;
+	my $pushpr = sub {
+		for my $p (@_) {
+			my $key = join('/', @{$p});
+			next if $seen{$key}++; # make sure there are no duplicates
+			push @pr, $p;
+		}
+	};
+	no warnings 'experimental';
+	for (split /,/, $pres||'') {
+		when (m%^(\d)/(\d+)%) { $pushpr->([$1, $2]) }
+		when ('edges') {
+			for my $i (0..5) {
+				$pushpr->([$i, $_]) for 5, 6, 7, 8;
+			}
+		}
+		when ('corners') {
+			for my $i (0..5) {
+				$pushpr->([$i, $_]) for 9, 10, 11, 12;
+			}
+		}
+		when ('P') { $pushpr->([0,11], [2,12], [3,10]) }
+		when ('Q') { $pushpr->([0,12], [3,9],  [4,11]) }
+		when ('R') { $pushpr->([0,9],  [1,12], [4,10]) }
+		when ('S') { $pushpr->([0,10], [1,11], [2,9] ) }
+		when ('T') { $pushpr->([1,10], [2,10], [5,11]) }
+		when ('U') { $pushpr->([1,9],  [4,9],  [5,12]) }
+		when ('V') { $pushpr->([3,12], [4,12], [5,9] ) }
+		when ('W') { $pushpr->([3,11], [2,11], [5,10]) }
+		default    { warn "Illegal preserve key: $_\n" }
+	}
+	my $min = scalar @pr;
+	for (split /,/, $goal||'') {
+		if (m%^(\d)/(\d+):(\d/\d+)$%) {
+			my ($i, $j, $val) = ($1, $2, $3);
+			push @gl, [$i, $j, $val];
+		} else {
+			warn "Illegal goal: $_\n";
+		}
+	}
+	return sub {
+		my $n = shift;
+		return 0 if $n and (($fix and $n != $fix) or ($min and $n < $min));
+		for (@gl) {
+			my ($i, $j, $val) = @{$_};
+			return 0 unless $s->{$i}{$j} eq $val;
+		}
+		for (@pr) {
+			my ($i, $j) = @{$_};
+			return 0 unless $s->{$i}{$j} eq "$i/$j";
+		}
+		return 1;
+	}
+}
 sub stable {
 	my $n = 0;
 	for my $i (0..5) {
 		for my $j (0..12) {
-			$n++ if $s->{$i}{$j} eq "$i/$j";
+			$n++ if $s->{$i}{$j} eq "$i/$j" or
+				($s->{$i}{$j} =~ m%^$i/% and $j =~ /^[1-4]$/);
 		}
 	}
 	return $n;
@@ -45,11 +103,13 @@ sub check {
 sub rep {
 	my ($i, $j) = @_;
 	my $a = $s->{$i}{$j};
-	return $a eq "$i/$j"? '- ' : $a;
+	$a =~ s%^$i/%-/%;
+	return $a eq "-/$j"? '- ' : $a;
 }
 sub printF {
 	my ($i, $j, $c) = @_;
-	given ($j) {
+	no warnings 'experimental';
+	for ($j) {
 		when(0) { printf " %6s%6s%6s$c",    map {rep($i, $_)} 10, 5, 9  }
 		when(1) { printf "    %6s%6s   $c", map {rep($i, $_)}   1, 4    }
 		when(2) { printf " %6s%6s%6s$c",    map {rep($i, $_)} 6, 0, 8   }
@@ -77,15 +137,26 @@ sub tmpcpy {
 }
 sub perm {
 	my @seq = @_;
-	sets();
 	my $k = join '', @seq;
 	return if $done{$k}++;
+	sets();
 	eval "rot$_" for @seq;
 	my $n = stable;
 	push @{$res{$n}}, $k;
 	# if (interestingly) stable, show the representation
-	if (&$showp($n)) {
+	if ($showp->($n)) {
 		say "$k: $n";
+		rep6;
+	}
+}
+sub permlite {
+	my @seq = @_;
+	my $k = join '', @seq;
+	return if $k =~ /(.)\1/i;
+	sets();
+	eval "rot$_" for @seq;
+	if ($showp->(0)) {
+		say "$k:";
 		rep6;
 	}
 }

@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+use strict;
+use DR;
+use Getopt::Long;
+use Algorithm::Permute qw(permute);
+use vars qw(%opt);
+
+sub usage {
+	my $err = shift;
+	print "$err\n\n" if $err;
+	print <<eot;
+  Options:
+    --verbose: print the frequency of each preserved positions number
+    --preserve s: show only moves which preserve a list of positions
+      (e.g.: edges, corners, P, Q, ..., W, 0/1, ..., 5/12)
+    --goal s: show only moves which achieve some goals
+      (e.g.: 5/12:2/11 meaning that what was in 2/11 will be found in 5/12)
+    --help: print this
+eot
+	exit;
+}
+sub togglecase {
+	my $c = shift;
+	return $c gt chr(96)? uc($c) : lc($c);
+}
+my $res = GetOptions(\%opt, 'verbose', 'help', 'preserve=s', 'goal=s');
+usage if $opt{help} or !$res;
+if ($opt{preserve} or $opt{goal}) {
+	$showp = filterp($opt{preserve}||'', $opt{goal}||'');
+} else {
+	die 'Here, one of goals/preserve is mandatory\n';
+}
+
+my $p = new Algorithm::Permute(['p'..'w', 'P'..'W'], 2);
+while ($p and my @c = $p->next) {
+	permlite(@c, @c, $c[0], togglecase($c[1]), @c, @c, $c[0]);
+}
